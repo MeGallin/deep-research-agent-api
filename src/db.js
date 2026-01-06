@@ -34,6 +34,7 @@ function initDb() {
           id TEXT PRIMARY KEY,
           topic TEXT NOT NULL,
           tone TEXT NOT NULL DEFAULT 'neutral',
+          format TEXT NOT NULL DEFAULT 'blog',
           status TEXT NOT NULL,
           step TEXT NOT NULL,
           research_json TEXT NOT NULL DEFAULT '[]',
@@ -47,6 +48,7 @@ function initDb() {
             return reject(error);
           }
           return ensureToneColumn(db)
+            .then(() => ensureFormatColumn(db))
             .then(() => resolve(db))
             .catch(reject);
         }
@@ -67,6 +69,29 @@ function ensureToneColumn(db) {
       }
       return db.run(
         "ALTER TABLE runs ADD COLUMN tone TEXT NOT NULL DEFAULT 'neutral'",
+        (alterError) => {
+          if (alterError) {
+            return reject(alterError);
+          }
+          return resolve();
+        }
+      );
+    });
+  });
+}
+
+function ensureFormatColumn(db) {
+  return new Promise((resolve, reject) => {
+    db.all("PRAGMA table_info(runs)", (error, rows) => {
+      if (error) {
+        return reject(error);
+      }
+      const hasFormat = rows.some((row) => row.name === "format");
+      if (hasFormat) {
+        return resolve();
+      }
+      return db.run(
+        "ALTER TABLE runs ADD COLUMN format TEXT NOT NULL DEFAULT 'blog'",
         (alterError) => {
           if (alterError) {
             return reject(alterError);

@@ -24,6 +24,7 @@ function toRunSnapshot(row) {
     id: row.id,
     topic: row.topic,
     tone: row.tone || "neutral",
+    format: row.format || "blog",
     status: row.status,
     step: row.step,
     research,
@@ -39,6 +40,7 @@ function toRunListItem(row) {
     id: row.id,
     topic: row.topic,
     tone: row.tone || "neutral",
+    format: row.format || "blog",
     status: row.status,
     step: row.step,
     error: row.error,
@@ -47,7 +49,7 @@ function toRunListItem(row) {
   };
 }
 
-function createRun({ topic, tone = "neutral" }) {
+function createRun({ topic, tone = "neutral", format = "blog" }) {
   const db = getDb();
   const now = new Date().toISOString();
   const id = generateRunId();
@@ -60,12 +62,13 @@ function createRun({ topic, tone = "neutral" }) {
   return new Promise((resolve, reject) => {
     db.run(
       `INSERT INTO runs (
-        id, topic, tone, status, step, research_json, draft, error, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        id, topic, tone, format, status, step, research_json, draft, error, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         topic,
         tone,
+        format,
         status,
         step,
         JSON.stringify(research),
@@ -82,6 +85,7 @@ function createRun({ topic, tone = "neutral" }) {
         id,
         topic,
         tone,
+        format,
         status,
         step,
         research,
@@ -147,6 +151,11 @@ function updateRun(runId, patch) {
     values.push(patch.tone || "neutral");
   }
 
+  if ("format" in patch) {
+    fields.push("format = ?");
+    values.push(patch.format || "blog");
+  }
+
   if (!fields.length) {
     return getRun(runId);
   }
@@ -175,7 +184,7 @@ function listRuns({ status, limit = 25, offset = 0 } = {}) {
   const where = status ? "WHERE status = ?" : "";
   const whereArgs = status ? [status] : [];
   const totalQuery = `SELECT COUNT(*) as total FROM runs ${where}`;
-  const listQuery = `SELECT id, topic, tone, status, step, error, created_at, updated_at
+  const listQuery = `SELECT id, topic, tone, format, status, step, error, created_at, updated_at
     FROM runs
     ${where}
     ORDER BY created_at DESC

@@ -39,8 +39,14 @@ function requireTopic(req, res, next) {
   if (tone.length > 60) {
     return res.status(400).json({ error: "Tone must be 60 characters or less." });
   }
+  const rawFormat = typeof req.body?.format === "string" ? req.body.format : "";
+  const format = rawFormat.trim();
+  if (format.length > 40) {
+    return res.status(400).json({ error: "Format must be 40 characters or less." });
+  }
   req.topic = topic;
   req.tone = tone || "neutral";
+  req.format = format || "blog";
   return next();
 }
 
@@ -70,7 +76,11 @@ function createApp() {
     "/api/runs",
     requireTopic,
     asyncHandler(async (req, res) => {
-      const run = await createRun({ topic: req.topic, tone: req.tone });
+      const run = await createRun({
+        topic: req.topic,
+        tone: req.tone,
+        format: req.format
+      });
       await updateRun(run.id, { status: "running", step: "starting" });
 
       res.status(202).json({ runId: run.id });
@@ -79,6 +89,7 @@ function createApp() {
         runId: run.id,
         topic: req.topic,
         tone: req.tone,
+        format: req.format,
         updateRun,
         publish,
         searchService: { search }

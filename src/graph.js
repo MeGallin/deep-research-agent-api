@@ -8,6 +8,10 @@ const StateAnnotation = Annotation.Root({
     reducer: (current, update) => (update ? update : current),
     default: () => "neutral"
   }),
+  format: Annotation({
+    reducer: (current, update) => (update ? update : current),
+    default: () => "blog"
+  }),
   research: Annotation({
     reducer: (current, update) => (update ? update : current),
     default: () => []
@@ -61,7 +65,8 @@ function buildGraph({ llm, prompts, searchService, emit, checkpointer }) {
       const userPrompt = renderTemplate(prompts.writer.userTemplate, {
         topic: state.topic,
         sources: sourcesText,
-        tone: state.tone
+        tone: state.tone,
+        format: state.format
       });
 
       const response = await llm.invoke(

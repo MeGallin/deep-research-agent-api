@@ -19,6 +19,7 @@ async function executeRun({
   runId,
   topic,
   tone,
+  format,
   updateRun,
   publish,
   searchService
@@ -43,6 +44,7 @@ async function executeRun({
     const initialState = {
       topic,
       tone: tone || "neutral",
+      format: format || "blog",
       research: [],
       draft: "",
       steps: []
