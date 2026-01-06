@@ -35,6 +35,7 @@ function initDb() {
           topic TEXT NOT NULL,
           tone TEXT NOT NULL DEFAULT 'neutral',
           format TEXT NOT NULL DEFAULT 'blog',
+          tokens_total INTEGER NOT NULL DEFAULT 0,
           status TEXT NOT NULL,
           step TEXT NOT NULL,
           research_json TEXT NOT NULL DEFAULT '[]',
@@ -49,6 +50,7 @@ function initDb() {
           }
           return ensureToneColumn(db)
             .then(() => ensureFormatColumn(db))
+            .then(() => ensureTokensColumn(db))
             .then(() => resolve(db))
             .catch(reject);
         }
@@ -92,6 +94,29 @@ function ensureFormatColumn(db) {
       }
       return db.run(
         "ALTER TABLE runs ADD COLUMN format TEXT NOT NULL DEFAULT 'blog'",
+        (alterError) => {
+          if (alterError) {
+            return reject(alterError);
+          }
+          return resolve();
+        }
+      );
+    });
+  });
+}
+
+function ensureTokensColumn(db) {
+  return new Promise((resolve, reject) => {
+    db.all("PRAGMA table_info(runs)", (error, rows) => {
+      if (error) {
+        return reject(error);
+      }
+      const hasTokens = rows.some((row) => row.name === "tokens_total");
+      if (hasTokens) {
+        return resolve();
+      }
+      return db.run(
+        "ALTER TABLE runs ADD COLUMN tokens_total INTEGER NOT NULL DEFAULT 0",
         (alterError) => {
           if (alterError) {
             return reject(alterError);

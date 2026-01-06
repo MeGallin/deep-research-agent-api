@@ -56,14 +56,16 @@ async function executeRun({
       status: "complete",
       step: "complete",
       research: finalState.research,
-      draft: finalState.draft
+      draft: finalState.draft,
+      tokensTotal: finalState.tokensTotal || 0
     });
 
     publish(runId, "status", { status: "complete" });
     publish(runId, "result", {
       topic,
       research: finalState.research,
-      draft: finalState.draft
+      draft: finalState.draft,
+      tokensTotal: finalState.tokensTotal || 0
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown error";

@@ -25,6 +25,7 @@ function toRunSnapshot(row) {
     topic: row.topic,
     tone: row.tone || "neutral",
     format: row.format || "blog",
+    tokensTotal: Number.isFinite(row.tokens_total) ? row.tokens_total : 0,
     status: row.status,
     step: row.step,
     research,
@@ -41,6 +42,7 @@ function toRunListItem(row) {
     topic: row.topic,
     tone: row.tone || "neutral",
     format: row.format || "blog",
+    tokensTotal: Number.isFinite(row.tokens_total) ? row.tokens_total : 0,
     status: row.status,
     step: row.step,
     error: row.error,
@@ -58,17 +60,19 @@ function createRun({ topic, tone = "neutral", format = "blog" }) {
   const research = [];
   const draft = "";
   const error = null;
+  const tokensTotal = 0;
 
   return new Promise((resolve, reject) => {
     db.run(
       `INSERT INTO runs (
-        id, topic, tone, format, status, step, research_json, draft, error, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        id, topic, tone, format, tokens_total, status, step, research_json, draft, error, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         topic,
         tone,
         format,
+        tokensTotal,
         status,
         step,
         JSON.stringify(research),
@@ -82,15 +86,16 @@ function createRun({ topic, tone = "neutral", format = "blog" }) {
           return reject(dbError);
         }
         return resolve({
-        id,
-        topic,
-        tone,
-        format,
-        status,
-        step,
-        research,
-        draft,
-        error,
+          id,
+          topic,
+          tone,
+          format,
+          tokensTotal,
+          status,
+          step,
+          research,
+          draft,
+          error,
           createdAt: now,
           updatedAt: now
         });
@@ -156,6 +161,12 @@ function updateRun(runId, patch) {
     values.push(patch.format || "blog");
   }
 
+  if ("tokensTotal" in patch) {
+    const tokens = Number.isFinite(patch.tokensTotal) ? patch.tokensTotal : 0;
+    fields.push("tokens_total = ?");
+    values.push(tokens);
+  }
+
   if (!fields.length) {
     return getRun(runId);
   }
@@ -184,7 +195,7 @@ function listRuns({ status, limit = 25, offset = 0 } = {}) {
   const where = status ? "WHERE status = ?" : "";
   const whereArgs = status ? [status] : [];
   const totalQuery = `SELECT COUNT(*) as total FROM runs ${where}`;
-  const listQuery = `SELECT id, topic, tone, format, status, step, error, created_at, updated_at
+  const listQuery = `SELECT id, topic, tone, format, tokens_total, status, step, error, created_at, updated_at
     FROM runs
     ${where}
     ORDER BY created_at DESC

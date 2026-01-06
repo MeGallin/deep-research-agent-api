@@ -35,6 +35,7 @@ test("createRun stores queued run and returns snapshot", async () => {
   assert.equal(run.topic, "Test topic");
   assert.equal(run.tone, "neutral");
   assert.equal(run.format, "blog");
+  assert.equal(run.tokensTotal, 0);
   assert.deepEqual(run.research, []);
   assert.equal(run.draft, "");
 });
@@ -67,4 +68,11 @@ test("deleteRun removes a run", async () => {
   assert.equal(removed, true);
   const missing = await getRun(run.id);
   assert.equal(missing, null);
+});
+
+test("updateRun can store tokensTotal", async () => {
+  const run = await createRun({ topic: "Token test" });
+  await updateRun(run.id, { tokensTotal: 321 });
+  const updated = await getRun(run.id);
+  assert.equal(updated.tokensTotal, 321);
 });

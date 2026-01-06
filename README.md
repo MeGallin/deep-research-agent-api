@@ -46,3 +46,4 @@ npm test
 - `POST /api/runs` accepts an optional `tone` string; default is `neutral`.
 - `POST /api/runs` accepts an optional `format` string; default is `blog`.
 - `DELETE /api/runs/:runId` removes a run record.
+- Run snapshots include `tokensTotal` after the writer completes.
