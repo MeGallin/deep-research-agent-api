@@ -46,7 +46,7 @@ function buildGraph({ llm, prompts, searchService, emit, checkpointer }) {
       const query = renderTemplate(prompts.researcher.queryTemplate, {
         topic: state.topic
       });
-      const results = searchService.search({
+      const results = await searchService.search({
         query,
         maxResults: prompts.researcher.maxResults
       });

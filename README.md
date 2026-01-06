@@ -20,6 +20,9 @@ Create `api/.env` (already in this repo) and set:
 - `CORS_ORIGINS` (comma-separated, default `http://localhost:5173`)
 - `CORS_CREDENTIALS` (`true`/`false`)
 - `SQLITE_DB_PATH` (default `./data/runs.sqlite`)
+- `SEARCH_PROVIDER` (`tavily` or `serper`, default `tavily`)
+- `TAVILY_API_KEY` (required for `tavily`)
+- `SERPER_API_KEY` (required for `serper`)
 
 ## Development
 
