@@ -15,7 +15,14 @@ function createEmitter({ runId, updateRun, publish }) {
   };
 }
 
-async function executeRun({ runId, topic, updateRun, publish, searchService }) {
+async function executeRun({
+  runId,
+  topic,
+  tone,
+  updateRun,
+  publish,
+  searchService
+}) {
   const emit = createEmitter({ runId, updateRun, publish });
 
   try {
@@ -35,6 +42,7 @@ async function executeRun({ runId, topic, updateRun, publish, searchService }) {
 
     const initialState = {
       topic,
+      tone: tone || "neutral",
       research: [],
       draft: "",
       steps: []

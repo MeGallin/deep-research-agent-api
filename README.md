@@ -40,3 +40,4 @@ npm test
 
 - Prompts are JSON config files in `api/src/prompts/`.
 - SSE is available at `/api/runs/:runId/events` and emits `snapshot`, `step`, `status`, and `result`.
+- `POST /api/runs` accepts an optional `tone` string; default is `neutral`.

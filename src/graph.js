@@ -4,6 +4,10 @@ const { renderTemplate } = require("./promptLoader");
 
 const StateAnnotation = Annotation.Root({
   topic: Annotation(),
+  tone: Annotation({
+    reducer: (current, update) => (update ? update : current),
+    default: () => "neutral"
+  }),
   research: Annotation({
     reducer: (current, update) => (update ? update : current),
     default: () => []
@@ -56,7 +60,8 @@ function buildGraph({ llm, prompts, searchService, emit, checkpointer }) {
       const sourcesText = formatSources(state.research);
       const userPrompt = renderTemplate(prompts.writer.userTemplate, {
         topic: state.topic,
-        sources: sourcesText
+        sources: sourcesText,
+        tone: state.tone
       });
 
       const response = await llm.invoke(

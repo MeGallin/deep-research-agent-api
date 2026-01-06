@@ -33,6 +33,7 @@ function initDb() {
         `CREATE TABLE IF NOT EXISTS runs (
           id TEXT PRIMARY KEY,
           topic TEXT NOT NULL,
+          tone TEXT NOT NULL DEFAULT 'neutral',
           status TEXT NOT NULL,
           step TEXT NOT NULL,
           research_json TEXT NOT NULL DEFAULT '[]',
@@ -45,7 +46,32 @@ function initDb() {
           if (error) {
             return reject(error);
           }
-          return resolve(db);
+          return ensureToneColumn(db)
+            .then(() => resolve(db))
+            .catch(reject);
+        }
+      );
+    });
+  });
+}
+
+function ensureToneColumn(db) {
+  return new Promise((resolve, reject) => {
+    db.all("PRAGMA table_info(runs)", (error, rows) => {
+      if (error) {
+        return reject(error);
+      }
+      const hasTone = rows.some((row) => row.name === "tone");
+      if (hasTone) {
+        return resolve();
+      }
+      return db.run(
+        "ALTER TABLE runs ADD COLUMN tone TEXT NOT NULL DEFAULT 'neutral'",
+        (alterError) => {
+          if (alterError) {
+            return reject(alterError);
+          }
+          return resolve();
         }
       );
     });

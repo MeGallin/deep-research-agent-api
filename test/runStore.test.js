@@ -33,6 +33,7 @@ test("createRun stores queued run and returns snapshot", async () => {
   assert.equal(run.status, "queued");
   assert.equal(run.step, "init");
   assert.equal(run.topic, "Test topic");
+  assert.equal(run.tone, "neutral");
   assert.deepEqual(run.research, []);
   assert.equal(run.draft, "");
 });

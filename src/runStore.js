@@ -23,6 +23,7 @@ function toRunSnapshot(row) {
   return {
     id: row.id,
     topic: row.topic,
+    tone: row.tone || "neutral",
     status: row.status,
     step: row.step,
     research,
@@ -37,6 +38,7 @@ function toRunListItem(row) {
   return {
     id: row.id,
     topic: row.topic,
+    tone: row.tone || "neutral",
     status: row.status,
     step: row.step,
     error: row.error,
@@ -45,7 +47,7 @@ function toRunListItem(row) {
   };
 }
 
-function createRun({ topic }) {
+function createRun({ topic, tone = "neutral" }) {
   const db = getDb();
   const now = new Date().toISOString();
   const id = generateRunId();
@@ -58,11 +60,12 @@ function createRun({ topic }) {
   return new Promise((resolve, reject) => {
     db.run(
       `INSERT INTO runs (
-        id, topic, status, step, research_json, draft, error, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        id, topic, tone, status, step, research_json, draft, error, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         topic,
+        tone,
         status,
         step,
         JSON.stringify(research),
@@ -76,13 +79,14 @@ function createRun({ topic }) {
           return reject(dbError);
         }
         return resolve({
-          id,
-          topic,
-          status,
-          step,
-          research,
-          draft,
-          error,
+        id,
+        topic,
+        tone,
+        status,
+        step,
+        research,
+        draft,
+        error,
           createdAt: now,
           updatedAt: now
         });
@@ -138,6 +142,11 @@ function updateRun(runId, patch) {
     values.push(patch.topic);
   }
 
+  if ("tone" in patch) {
+    fields.push("tone = ?");
+    values.push(patch.tone || "neutral");
+  }
+
   if (!fields.length) {
     return getRun(runId);
   }
@@ -166,7 +175,7 @@ function listRuns({ status, limit = 25, offset = 0 } = {}) {
   const where = status ? "WHERE status = ?" : "";
   const whereArgs = status ? [status] : [];
   const totalQuery = `SELECT COUNT(*) as total FROM runs ${where}`;
-  const listQuery = `SELECT id, topic, status, step, error, created_at, updated_at
+  const listQuery = `SELECT id, topic, tone, status, step, error, created_at, updated_at
     FROM runs
     ${where}
     ORDER BY created_at DESC

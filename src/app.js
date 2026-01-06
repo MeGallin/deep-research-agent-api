@@ -34,7 +34,13 @@ function requireTopic(req, res, next) {
   if (topic.length < 3 || topic.length > 200) {
     return res.status(400).json({ error: "Topic must be 3-200 characters." });
   }
+  const rawTone = typeof req.body?.tone === "string" ? req.body.tone : "";
+  const tone = rawTone.trim();
+  if (tone.length > 60) {
+    return res.status(400).json({ error: "Tone must be 60 characters or less." });
+  }
   req.topic = topic;
+  req.tone = tone || "neutral";
   return next();
 }
 
@@ -64,7 +70,7 @@ function createApp() {
     "/api/runs",
     requireTopic,
     asyncHandler(async (req, res) => {
-      const run = await createRun({ topic: req.topic });
+      const run = await createRun({ topic: req.topic, tone: req.tone });
       await updateRun(run.id, { status: "running", step: "starting" });
 
       res.status(202).json({ runId: run.id });
@@ -72,6 +78,7 @@ function createApp() {
       executeRun({
         runId: run.id,
         topic: req.topic,
+        tone: req.tone,
         updateRun,
         publish,
         searchService: { search }
