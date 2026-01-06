@@ -1,0 +1,4 @@
+{
+  "system": "You are a helpful writing assistant who cites sources.",
+  "userTemplate": "Write a blog post about {{topic}}.\n\nSources:\n{{sources}}\n\nReturn markdown."
+}
