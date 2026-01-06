@@ -22,6 +22,22 @@ function isTruthy(value) {
   return ["1", "true", "yes", "on"].includes(value.toLowerCase());
 }
 
+function asyncHandler(handler) {
+  return (req, res, next) => {
+    Promise.resolve(handler(req, res, next)).catch(next);
+  };
+}
+
+function requireTopic(req, res, next) {
+  const rawTopic = typeof req.body?.topic === "string" ? req.body.topic : "";
+  const topic = rawTopic.trim();
+  if (topic.length < 3 || topic.length > 200) {
+    return res.status(400).json({ error: "Topic must be 3-200 characters." });
+  }
+  req.topic = topic;
+  return next();
+}
+
 function createApp() {
   const app = express();
 
@@ -44,59 +60,61 @@ function createApp() {
   app.options("*", cors(corsOptions));
   app.use(express.json());
 
-  app.post("/api/runs", async (req, res) => {
-    const topic = typeof req.body?.topic === "string" ? req.body.topic.trim() : "";
-    if (topic.length < 3 || topic.length > 200) {
-      return res.status(400).json({ error: "Topic must be 3-200 characters." });
-    }
-
-    try {
-      const run = await createRun({ topic });
+  app.post(
+    "/api/runs",
+    requireTopic,
+    asyncHandler(async (req, res) => {
+      const run = await createRun({ topic: req.topic });
       await updateRun(run.id, { status: "running", step: "starting" });
 
       res.status(202).json({ runId: run.id });
 
       executeRun({
         runId: run.id,
-        topic,
+        topic: req.topic,
         updateRun,
         publish,
         searchService: { search }
+      }).catch(async (error) => {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        await updateRun(run.id, {
+          status: "error",
+          step: "error",
+          error: message
+        });
+        publish(run.id, "status", { status: "error", error: message });
       });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to create run." });
-    }
-  });
+    })
+  );
 
-  app.get("/api/runs/:runId", async (req, res) => {
-    try {
+  app.get(
+    "/api/runs/:runId",
+    asyncHandler(async (req, res) => {
       const run = await getRun(req.params.runId);
       if (!run) {
         return res.status(404).json({ error: "Run not found." });
       }
       return res.json(run);
-    } catch (error) {
-      return res.status(500).json({ error: "Failed to load run." });
-    }
-  });
+    })
+  );
 
-  app.get("/api/runs", async (req, res) => {
-    const status = typeof req.query.status === "string" ? req.query.status : undefined;
-    const limitRaw = Number(req.query.limit || 25);
-    const offsetRaw = Number(req.query.offset || 0);
-    const limit = Math.min(Math.max(limitRaw, 1), 200);
-    const offset = Math.max(offsetRaw, 0);
+  app.get(
+    "/api/runs",
+    asyncHandler(async (req, res) => {
+      const status = typeof req.query.status === "string" ? req.query.status : undefined;
+      const limitRaw = Number(req.query.limit || 25);
+      const offsetRaw = Number(req.query.offset || 0);
+      const limit = Math.min(Math.max(limitRaw, 1), 200);
+      const offset = Math.max(offsetRaw, 0);
 
-    try {
       const page = await listRuns({ status, limit, offset });
       return res.json(page);
-    } catch (error) {
-      return res.status(500).json({ error: "Failed to list runs." });
-    }
-  });
+    })
+  );
 
-  app.get("/api/runs/:runId/events", async (req, res) => {
-    try {
+  app.get(
+    "/api/runs/:runId/events",
+    asyncHandler(async (req, res) => {
       const run = await getRun(req.params.runId);
       if (!run) {
         return res.status(404).json({ error: "Run not found." });
@@ -113,9 +131,18 @@ function createApp() {
       req.on("close", () => {
         unsubscribe();
       });
-    } catch (error) {
-      res.status(500).json({ error: "Failed to open event stream." });
+    })
+  );
+
+  app.use((err, req, res, next) => {
+    if (res.headersSent) {
+      return next(err);
     }
+    if (err instanceof SyntaxError && err.type === "entity.parse.failed") {
+      return res.status(400).json({ error: "Invalid JSON body." });
+    }
+    console.error("[api] request error", err);
+    return res.status(500).json({ error: "Unexpected server error." });
   });
 
   return app;
