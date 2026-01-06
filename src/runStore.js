@@ -202,9 +202,22 @@ function listRuns({ status, limit = 25, offset = 0 } = {}) {
   });
 }
 
+function deleteRun(runId) {
+  const db = getDb();
+  return new Promise((resolve, reject) => {
+    db.run("DELETE FROM runs WHERE id = ?", [runId], function (dbError) {
+      if (dbError) {
+        return reject(dbError);
+      }
+      return resolve(this.changes > 0);
+    });
+  });
+}
+
 module.exports = {
   createRun,
   getRun,
   updateRun,
-  listRuns
+  listRuns,
+  deleteRun
 };

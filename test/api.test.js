@@ -47,6 +47,12 @@ test("GET /api/runs returns stored runs", async () => {
   assert.ok(found);
 });
 
+test("DELETE /api/runs/:runId deletes a run", async () => {
+  const run = await createRun({ topic: "Delete api" });
+  await request(app).delete(`/api/runs/${run.id}`).expect(204);
+  await request(app).get(`/api/runs/${run.id}`).expect(404);
+});
+
 test("SSE endpoint sends snapshot first", async () => {
   const run = await createRun({ topic: "SSE test" });
   const server = app.listen(0);

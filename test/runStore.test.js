@@ -14,7 +14,7 @@ const dbPath = path.join(
 process.env.SQLITE_DB_PATH = dbPath;
 
 const { initDb, getDb } = require("../src/db");
-const { createRun, getRun, updateRun, listRuns } = require("../src/runStore");
+const { createRun, getRun, updateRun, listRuns, deleteRun } = require("../src/runStore");
 
 test.before(async () => {
   await initDb();
@@ -58,4 +58,12 @@ test("listRuns filters by status", async () => {
 
   const queuedSnapshot = await getRun(queuedRun.id);
   assert.equal(queuedSnapshot.status, "queued");
+});
+
+test("deleteRun removes a run", async () => {
+  const run = await createRun({ topic: "Delete me" });
+  const removed = await deleteRun(run.id);
+  assert.equal(removed, true);
+  const missing = await getRun(run.id);
+  assert.equal(missing, null);
 });

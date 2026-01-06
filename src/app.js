@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const { createRun, getRun, listRuns, updateRun } = require("./runStore");
+const { createRun, getRun, listRuns, updateRun, deleteRun } = require("./runStore");
 const { publish, subscribe, writeEvent } = require("./sse");
 const { executeRun } = require("./runExecutor");
 const { search } = require("./searchService");
@@ -116,6 +116,17 @@ function createApp() {
 
       const page = await listRuns({ status, limit, offset });
       return res.json(page);
+    })
+  );
+
+  app.delete(
+    "/api/runs/:runId",
+    asyncHandler(async (req, res) => {
+      const removed = await deleteRun(req.params.runId);
+      if (!removed) {
+        return res.status(404).json({ error: "Run not found." });
+      }
+      return res.status(204).send();
     })
   );
 
