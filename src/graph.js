@@ -1,6 +1,7 @@
 const { Annotation, END, START, StateGraph } = require("@langchain/langgraph");
 const { SystemMessage, HumanMessage } = require("@langchain/core/messages");
 const { renderTemplate } = require("./promptLoader");
+const { getTokenTotal } = require("./tokenUsage");
 
 const StateAnnotation = Annotation.Root({
   topic: Annotation(),
@@ -77,7 +78,7 @@ function buildGraph({ llm, prompts, searchService, emit, checkpointer }) {
         [new SystemMessage(prompts.writer.system), new HumanMessage(userPrompt)]
       );
       const draft = response.content || "";
-      const tokensTotal = extractTokenTotal(response);
+      const tokensTotal = getTokenTotal(response);
 
       emit("step", { step: "writer:done", chars: draft.length });
 
@@ -92,26 +93,6 @@ function buildGraph({ llm, prompts, searchService, emit, checkpointer }) {
     .addEdge("writer", END);
 
   return workflow.compile({ checkpointer });
-}
-
-function extractTokenTotal(response) {
-  const usage =
-    response?.usage_metadata ||
-    response?.response_metadata?.token_usage ||
-    response?.response_metadata?.usage;
-  if (!usage) {
-    return 0;
-  }
-  if (typeof usage.total_tokens === "number") {
-    return usage.total_tokens;
-  }
-  if (typeof usage.total === "number") {
-    return usage.total;
-  }
-  const prompt = usage.prompt_tokens ?? usage.input_tokens ?? 0;
-  const completion = usage.completion_tokens ?? usage.output_tokens ?? 0;
-  const sum = Number(prompt) + Number(completion);
-  return Number.isFinite(sum) ? sum : 0;
 }
 
 module.exports = {

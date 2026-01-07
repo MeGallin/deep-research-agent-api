@@ -53,6 +53,12 @@ test("DELETE /api/runs/:runId deletes a run", async () => {
   await request(app).get(`/api/runs/${run.id}`).expect(404);
 });
 
+test("GET /api/runs/:runId/rewrites lists variants", async () => {
+  const run = await createRun({ topic: "Rewrite list" });
+  const response = await request(app).get(`/api/runs/${run.id}/rewrites`).expect(200);
+  assert.deepEqual(response.body.items, []);
+});
+
 test("SSE endpoint sends snapshot first", async () => {
   const run = await createRun({ topic: "SSE test" });
   const server = app.listen(0);

@@ -47,3 +47,6 @@ npm test
 - `POST /api/runs` accepts an optional `format` string; default is `blog`.
 - `DELETE /api/runs/:runId` removes a run record.
 - Run snapshots include `tokensTotal` after the writer completes.
+- `POST /api/runs/:runId/rewrites` creates a rewritten variant using the existing draft.
+- `GET /api/runs/:runId/rewrites` lists rewrite variants.
+- `GET /api/runs/:runId/rewrites/:variantId` returns a rewrite variant draft.

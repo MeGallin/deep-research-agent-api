@@ -7,7 +7,7 @@
     "dev": "nodemon src/index.js",
     "build": "node -e \"console.log('No build step defined')\"",
     "start": "node src/index.js",
-    "test": "node test/runStore.test.js && node test/api.test.js"
+    "test": "node test/runStore.test.js && node test/runVariantStore.test.js && node test/api.test.js"
   },
   "dependencies": {
     "cors": "^2.8.5",

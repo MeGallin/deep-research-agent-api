@@ -1,9 +1,11 @@
 const express = require("express");
 const cors = require("cors");
 const { createRun, getRun, listRuns, updateRun, deleteRun } = require("./runStore");
+const { getVariant, listVariants } = require("./runVariantStore");
 const { publish, subscribe, writeEvent } = require("./sse");
 const { executeRun } = require("./runExecutor");
 const { search } = require("./searchService");
+const { rewriteRun } = require("./runRewriter");
 
 function parseAllowedOrigins(value) {
   if (!value) {
@@ -113,6 +115,69 @@ function createApp() {
         return res.status(404).json({ error: "Run not found." });
       }
       return res.json(run);
+    })
+  );
+
+  app.get(
+    "/api/runs/:runId/rewrites",
+    asyncHandler(async (req, res) => {
+      const run = await getRun(req.params.runId);
+      if (!run) {
+        return res.status(404).json({ error: "Run not found." });
+      }
+      const items = await listVariants(req.params.runId);
+      return res.json({ items });
+    })
+  );
+
+  app.get(
+    "/api/runs/:runId/rewrites/:variantId",
+    asyncHandler(async (req, res) => {
+      const run = await getRun(req.params.runId);
+      if (!run) {
+        return res.status(404).json({ error: "Run not found." });
+      }
+      const variant = await getVariant({
+        runId: req.params.runId,
+        variantId: req.params.variantId
+      });
+      if (!variant) {
+        return res.status(404).json({ error: "Rewrite not found." });
+      }
+      return res.json(variant);
+    })
+  );
+
+  app.post(
+    "/api/runs/:runId/rewrites",
+    asyncHandler(async (req, res) => {
+      const run = await getRun(req.params.runId);
+      if (!run) {
+        return res.status(404).json({ error: "Run not found." });
+      }
+      if (!run.draft) {
+        return res.status(400).json({ error: "Run has no draft to rewrite." });
+      }
+
+      const rawTone = typeof req.body?.tone === "string" ? req.body.tone : "";
+      const tone = rawTone.trim();
+      if (tone.length > 60) {
+        return res.status(400).json({ error: "Tone must be 60 characters or less." });
+      }
+
+      const rawFormat = typeof req.body?.format === "string" ? req.body.format : "";
+      const format = rawFormat.trim();
+      if (format.length > 40) {
+        return res.status(400).json({ error: "Format must be 40 characters or less." });
+      }
+
+      const variant = await rewriteRun({
+        run,
+        tone: tone || run.tone,
+        format: format || run.format
+      });
+
+      return res.status(201).json(variant);
     })
   );
 

@@ -37,12 +37,19 @@ function toRunSnapshot(row) {
 }
 
 function toRunListItem(row) {
+  const variantsCount = Number.isFinite(row.variants_count) ? row.variants_count : 0;
+  const variantsTokens = Number.isFinite(row.variants_tokens) ? row.variants_tokens : 0;
+  const tokensTotal = Number.isFinite(row.tokens_total) ? row.tokens_total : 0;
+  const tokensTotalAll = tokensTotal + variantsTokens;
+
   return {
     id: row.id,
     topic: row.topic,
     tone: row.tone || "neutral",
     format: row.format || "blog",
-    tokensTotal: Number.isFinite(row.tokens_total) ? row.tokens_total : 0,
+    tokensTotal,
+    tokensTotalAll,
+    variantsCount,
     status: row.status,
     step: row.step,
     error: row.error,
@@ -195,7 +202,19 @@ function listRuns({ status, limit = 25, offset = 0 } = {}) {
   const where = status ? "WHERE status = ?" : "";
   const whereArgs = status ? [status] : [];
   const totalQuery = `SELECT COUNT(*) as total FROM runs ${where}`;
-  const listQuery = `SELECT id, topic, tone, format, tokens_total, status, step, error, created_at, updated_at
+  const listQuery = `SELECT
+      id,
+      topic,
+      tone,
+      format,
+      tokens_total,
+      status,
+      step,
+      error,
+      created_at,
+      updated_at,
+      (SELECT COUNT(*) FROM run_variants rv WHERE rv.run_id = runs.id) AS variants_count,
+      (SELECT COALESCE(SUM(tokens_total), 0) FROM run_variants rv WHERE rv.run_id = runs.id) AS variants_tokens
     FROM runs
     ${where}
     ORDER BY created_at DESC

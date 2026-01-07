@@ -14,7 +14,14 @@ const dbPath = path.join(
 process.env.SQLITE_DB_PATH = dbPath;
 
 const { initDb, getDb } = require("../src/db");
-const { createRun, getRun, updateRun, listRuns, deleteRun } = require("../src/runStore");
+const {
+  createRun,
+  getRun,
+  updateRun,
+  listRuns,
+  deleteRun
+} = require("../src/runStore");
+const { createVariant } = require("../src/runVariantStore");
 
 test.before(async () => {
   await initDb();
@@ -52,11 +59,21 @@ test("listRuns filters by status", async () => {
   const queuedRun = await createRun({ topic: "Queued run" });
   const completeRun = await createRun({ topic: "Complete run" });
   await updateRun(completeRun.id, { status: "complete", step: "complete" });
+  await updateRun(completeRun.id, { tokensTotal: 200 });
+  await createVariant({
+    runId: completeRun.id,
+    tone: "neutral",
+    format: "blog",
+    draft: "Variant draft",
+    tokensTotal: 50
+  });
 
   const page = await listRuns({ status: "complete", limit: 10, offset: 0 });
   assert.equal(page.total, 1);
   assert.equal(page.items.length, 1);
   assert.equal(page.items[0].id, completeRun.id);
+  assert.equal(page.items[0].variantsCount, 1);
+  assert.equal(page.items[0].tokensTotalAll, 250);
 
   const queuedSnapshot = await getRun(queuedRun.id);
   assert.equal(queuedSnapshot.status, "queued");

@@ -51,6 +51,7 @@ function initDb() {
           return ensureToneColumn(db)
             .then(() => ensureFormatColumn(db))
             .then(() => ensureTokensColumn(db))
+            .then(() => ensureVariantsTable(db))
             .then(() => resolve(db))
             .catch(reject);
         }
@@ -125,6 +126,29 @@ function ensureTokensColumn(db) {
         }
       );
     });
+  });
+}
+
+function ensureVariantsTable(db) {
+  return new Promise((resolve, reject) => {
+    db.run(
+      `CREATE TABLE IF NOT EXISTS run_variants (
+        id TEXT PRIMARY KEY,
+        run_id TEXT NOT NULL,
+        tone TEXT NOT NULL DEFAULT 'neutral',
+        format TEXT NOT NULL DEFAULT 'blog',
+        draft TEXT NOT NULL DEFAULT '',
+        tokens_total INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY(run_id) REFERENCES runs(id) ON DELETE CASCADE
+      )`,
+      (error) => {
+        if (error) {
+          return reject(error);
+        }
+        return resolve();
+      }
+    );
   });
 }
 

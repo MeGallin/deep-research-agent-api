@@ -15,11 +15,13 @@ function loadPromptConfig() {
 
   const researcherPath = path.join(promptDir, "researcher.json");
   const writerPath = path.join(promptDir, "writer.json");
+  const rewriterPath = path.join(promptDir, "rewriter.json");
 
   const researcher = readJson(researcherPath);
   const writer = readJson(writerPath);
+  const rewriter = readJson(rewriterPath);
 
-  return { researcher, writer };
+  return { researcher, writer, rewriter };
 }
 
 function renderTemplate(template, variables = {}) {
