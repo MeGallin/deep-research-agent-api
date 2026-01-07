@@ -35,6 +35,7 @@ function initDb() {
           topic TEXT NOT NULL,
           tone TEXT NOT NULL DEFAULT 'neutral',
           format TEXT NOT NULL DEFAULT 'blog',
+          guidance TEXT NOT NULL DEFAULT '',
           tokens_total INTEGER NOT NULL DEFAULT 0,
           status TEXT NOT NULL,
           step TEXT NOT NULL,
@@ -50,6 +51,7 @@ function initDb() {
           }
           return ensureToneColumn(db)
             .then(() => ensureFormatColumn(db))
+            .then(() => ensureGuidanceColumn(db))
             .then(() => ensureTokensColumn(db))
             .then(() => ensureVariantsTable(db))
             .then(() => resolve(db))
@@ -95,6 +97,29 @@ function ensureFormatColumn(db) {
       }
       return db.run(
         "ALTER TABLE runs ADD COLUMN format TEXT NOT NULL DEFAULT 'blog'",
+        (alterError) => {
+          if (alterError) {
+            return reject(alterError);
+          }
+          return resolve();
+        }
+      );
+    });
+  });
+}
+
+function ensureGuidanceColumn(db) {
+  return new Promise((resolve, reject) => {
+    db.all("PRAGMA table_info(runs)", (error, rows) => {
+      if (error) {
+        return reject(error);
+      }
+      const hasGuidance = rows.some((row) => row.name === "guidance");
+      if (hasGuidance) {
+        return resolve();
+      }
+      return db.run(
+        "ALTER TABLE runs ADD COLUMN guidance TEXT NOT NULL DEFAULT ''",
         (alterError) => {
           if (alterError) {
             return reject(alterError);

@@ -25,6 +25,7 @@ function toRunSnapshot(row) {
     topic: row.topic,
     tone: row.tone || "neutral",
     format: row.format || "blog",
+    guidance: row.guidance || "",
     tokensTotal: Number.isFinite(row.tokens_total) ? row.tokens_total : 0,
     status: row.status,
     step: row.step,
@@ -47,6 +48,7 @@ function toRunListItem(row) {
     topic: row.topic,
     tone: row.tone || "neutral",
     format: row.format || "blog",
+    guidance: row.guidance || "",
     tokensTotal,
     tokensTotalAll,
     variantsCount,
@@ -58,7 +60,7 @@ function toRunListItem(row) {
   };
 }
 
-function createRun({ topic, tone = "neutral", format = "blog" }) {
+function createRun({ topic, tone = "neutral", format = "blog", guidance = "" }) {
   const db = getDb();
   const now = new Date().toISOString();
   const id = generateRunId();
@@ -68,17 +70,19 @@ function createRun({ topic, tone = "neutral", format = "blog" }) {
   const draft = "";
   const error = null;
   const tokensTotal = 0;
+  const safeGuidance = guidance || "";
 
   return new Promise((resolve, reject) => {
     db.run(
       `INSERT INTO runs (
-        id, topic, tone, format, tokens_total, status, step, research_json, draft, error, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        id, topic, tone, format, guidance, tokens_total, status, step, research_json, draft, error, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         topic,
         tone,
         format,
+        safeGuidance,
         tokensTotal,
         status,
         step,
@@ -97,6 +101,7 @@ function createRun({ topic, tone = "neutral", format = "blog" }) {
           topic,
           tone,
           format,
+          guidance: safeGuidance,
           tokensTotal,
           status,
           step,
@@ -168,6 +173,11 @@ function updateRun(runId, patch) {
     values.push(patch.format || "blog");
   }
 
+  if ("guidance" in patch) {
+    fields.push("guidance = ?");
+    values.push(patch.guidance || "");
+  }
+
   if ("tokensTotal" in patch) {
     const tokens = Number.isFinite(patch.tokensTotal) ? patch.tokensTotal : 0;
     fields.push("tokens_total = ?");
@@ -207,6 +217,7 @@ function listRuns({ status, limit = 25, offset = 0 } = {}) {
       topic,
       tone,
       format,
+      guidance,
       tokens_total,
       status,
       step,

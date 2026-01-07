@@ -20,6 +20,7 @@ async function executeRun({
   topic,
   tone,
   format,
+  guidance,
   updateRun,
   publish,
   searchService
@@ -45,6 +46,7 @@ async function executeRun({
       topic,
       tone: tone || "neutral",
       format: format || "blog",
+      guidance: guidance || "",
       research: [],
       draft: "",
       steps: []

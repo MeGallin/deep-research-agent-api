@@ -21,7 +21,8 @@ async function rewriteRun({ run, tone, format }) {
     draft: run.draft,
     tone: rewriteTone,
     format: rewriteFormat,
-    topic: run.topic
+    topic: run.topic,
+    guidance: run.guidance || ""
   });
 
   const response = await llm.invoke(

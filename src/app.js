@@ -46,9 +46,16 @@ function requireTopic(req, res, next) {
   if (format.length > 40) {
     return res.status(400).json({ error: "Format must be 40 characters or less." });
   }
+  const rawGuidance =
+    typeof req.body?.guidance === "string" ? req.body.guidance : "";
+  const guidance = rawGuidance.trim();
+  if (guidance.length > 1000) {
+    return res.status(400).json({ error: "Guidance must be 1000 characters or less." });
+  }
   req.topic = topic;
   req.tone = tone || "neutral";
   req.format = format || "blog";
+  req.guidance = guidance;
   return next();
 }
 
@@ -81,7 +88,8 @@ function createApp() {
       const run = await createRun({
         topic: req.topic,
         tone: req.tone,
-        format: req.format
+        format: req.format,
+        guidance: req.guidance
       });
       await updateRun(run.id, { status: "running", step: "starting" });
 
@@ -92,6 +100,7 @@ function createApp() {
         topic: req.topic,
         tone: req.tone,
         format: req.format,
+        guidance: req.guidance,
         updateRun,
         publish,
         searchService: { search }

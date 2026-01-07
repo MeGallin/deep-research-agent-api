@@ -45,6 +45,7 @@ npm test
 - SSE is available at `/api/runs/:runId/events` and emits `snapshot`, `step`, `status`, and `result`.
 - `POST /api/runs` accepts an optional `tone` string; default is `neutral`.
 - `POST /api/runs` accepts an optional `format` string; default is `blog`.
+- `POST /api/runs` accepts optional `guidance` text to steer output.
 - `DELETE /api/runs/:runId` removes a run record.
 - Run snapshots include `tokensTotal` after the writer completes.
 - `POST /api/runs/:runId/rewrites` creates a rewritten variant using the existing draft.

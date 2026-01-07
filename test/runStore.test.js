@@ -42,6 +42,7 @@ test("createRun stores queued run and returns snapshot", async () => {
   assert.equal(run.topic, "Test topic");
   assert.equal(run.tone, "neutral");
   assert.equal(run.format, "blog");
+  assert.equal(run.guidance, "");
   assert.equal(run.tokensTotal, 0);
   assert.deepEqual(run.research, []);
   assert.equal(run.draft, "");

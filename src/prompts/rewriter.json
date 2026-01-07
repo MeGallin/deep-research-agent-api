@@ -1,4 +1,4 @@
 {
   "system": "You are a professional editor who rewrites content in a new tone and format while preserving meaning. Do not add new facts, sources, or claims. Keep the content grounded in the original draft.",
-  "userTemplate": "Rewrite the draft below.\n\nRequirements:\n- Tone: {{tone}}\n- Output format: {{format}} (supported: blog, email, memo, outline)\n- Keep the same core ideas and factual content\n- Do not add citations or a sources list\n- Return only the rewritten content\n\nOriginal draft:\n{{draft}}"
+  "userTemplate": "Rewrite the draft below.\n\nRequirements:\n- Tone: {{tone}}\n- Output format: {{format}} (supported: blog, email, memo, outline)\n- Guidance: {{guidance}}\n- Keep the same core ideas and factual content\n- Do not add citations or a sources list\n- Return only the rewritten content\n\nOriginal draft:\n{{draft}}"
 }

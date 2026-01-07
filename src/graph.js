@@ -13,6 +13,10 @@ const StateAnnotation = Annotation.Root({
     reducer: (current, update) => (update ? update : current),
     default: () => "blog"
   }),
+  guidance: Annotation({
+    reducer: (current, update) => (update ? update : current),
+    default: () => ""
+  }),
   tokensTotal: Annotation({
     reducer: (current, update) => (typeof update === "number" ? update : current),
     default: () => 0
@@ -71,7 +75,8 @@ function buildGraph({ llm, prompts, searchService, emit, checkpointer }) {
         topic: state.topic,
         sources: sourcesText,
         tone: state.tone,
-        format: state.format
+        format: state.format,
+        guidance: state.guidance
       });
 
       const response = await llm.invoke(
